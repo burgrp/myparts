@@ -6,11 +6,17 @@ import {
   CallToolRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 
+import path from 'path';
 import { JsonDB } from './db/json-db.js';
 import { tools } from './tools.js';
+import { startUploadServer } from './upload-server.js';
 
 const dataFile = process.env.myparts_DATA ?? `parts.json`;
 const db = new JsonDB(dataFile);
+
+const uploadsDir = path.join(path.dirname(path.resolve(dataFile)), 'uploads');
+const uploadPort = parseInt(process.env.MYPARTS_UPLOAD_PORT ?? '3456', 10);
+startUploadServer(uploadsDir, uploadPort);
 
 const server = new Server(
   { name: 'parts', version: '1.0.0' },

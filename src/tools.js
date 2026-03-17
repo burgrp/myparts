@@ -3,6 +3,15 @@
  * Each tool has: name, description, inputSchema (JSON Schema), handler(db, args).
  */
 
+import path from 'path';
+import QRCode from 'qrcode';
+import { getLatestPhoto, getUploadUrls } from './upload-server.js';
+
+function uploadsDir() {
+  const dataFile = process.env.myparts_DATA ?? 'parts.json';
+  return path.join(path.dirname(path.resolve(dataFile)), 'uploads');
+}
+
 function ok(text) {
   return { content: [{ type: 'text', text }] };
 }
@@ -116,6 +125,37 @@ export const tools = [
     async handler(db, { query }) {
       const parts = await db.findParts(query);
       return json(parts);
+    },
+  },
+
+  {
+    name: 'photo_server_url',
+    description: 'Return the URL(s) of the photo upload server so the user can open it on their phone.',
+    inputSchema: { type: 'object', properties: {} },
+    async handler(_db, _args) {
+      const urls = getUploadUrls();
+      if (!urls.length) throw new Error('Upload server is not running.');
+      const parts = await Promise.all(urls.map(async url => {
+        const qr = await QRCode.toString(url, { type: 'utf8', small: true });
+        return `${url}\n${qr}`;
+      }));
+      return ok(parts.join('\n'));
+    },
+  },
+
+  {
+    name: 'photo_get_latest',
+    description: 'Return the most recently uploaded photo from the phone upload server as an image, so it can be inspected to identify a part.',
+    inputSchema: { type: 'object', properties: {} },
+    async handler(_db, _args) {
+      const photo = getLatestPhoto(uploadsDir());
+      if (!photo) throw new Error('No photos found. Upload one at the photo server URL.');
+      return {
+        content: [
+          { type: 'image', data: photo.data, mimeType: photo.mimeType },
+          { type: 'text', text: `Photo: ${photo.filename}` },
+        ],
+      };
     },
   },
 
