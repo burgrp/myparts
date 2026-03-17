@@ -1,0 +1,16 @@
+{
+  "name": "myparts",
+  "version": "1.0.0",
+  "description": "Electronic parts inventory MCP server",
+  "type": "module",
+  "main": "src/index.js",
+  "bin": {
+    "myparts": "src/index.js"
+  },
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  }
+}
