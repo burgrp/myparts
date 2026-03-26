@@ -135,11 +135,13 @@ export const tools = [
     async handler(_db, _args) {
       const urls = getUploadUrls();
       if (!urls.length) throw new Error('Upload server is not running.');
-      const parts = await Promise.all(urls.map(async url => {
-        const qr = await QRCode.toString(url, { type: 'utf8', small: true });
-        return `${url}\n${qr}`;
-      }));
-      return ok(parts.join('\n'));
+      const content = [];
+      for (const url of urls) {
+        const buf = await QRCode.toBuffer(url, { scale: 8 });
+        content.push({ type: 'text', text: url });
+        content.push({ type: 'image', data: buf.toString('base64'), mimeType: 'image/png' });
+      }
+      return { content };
     },
   },
 
