@@ -105,8 +105,6 @@ function getLocalIPs() {
 }
 
 export async function startUploadServer(uploadsDir, port) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-
   const server = http.createServer((req, res) => {
     if (req.method === 'GET' && req.url === '/') {
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
@@ -125,6 +123,7 @@ export async function startUploadServer(uploadsDir, port) {
       req.on('data', chunk => chunks.push(chunk));
       req.on('end', () => {
         const buf = Buffer.concat(chunks);
+        fs.mkdirSync(uploadsDir, { recursive: true });
         fs.writeFile(filePath, buf, err => {
           if (err) {
             res.writeHead(500, { 'Content-Type': 'application/json' });
